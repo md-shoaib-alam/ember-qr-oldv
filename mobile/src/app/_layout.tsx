@@ -1,7 +1,7 @@
 import { useFonts } from 'expo-font';
 import { Tabs } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
+import * as SystemUI from 'expo-system-ui';
 import { useEffect } from 'react';
 import { View } from 'react-native';
 
@@ -9,9 +9,6 @@ import { EmberBackground } from '@/components/EmberBackground';
 import { Icon, type IconName } from '@/components/Icon';
 import { LiquidTabBar } from '@/components/LiquidTabBar';
 import { ThemeModeProvider, useTheme, useThemeMode } from '@/theme';
-
-// Keep the splash screen up until the fonts are ready, so the first frame is already in Bricolage.
-SplashScreen.preventAutoHideAsync();
 
 const TABS: { name: string; title: string; icon: IconName }[] = [
   { name: 'index', title: 'Text', icon: 'edit_note' },
@@ -39,10 +36,15 @@ function Root() {
     MaterialSymbolsFill: require('@/assets/fonts/MaterialSymbolsFill.ttf'),
   });
 
+  // The bottom inset band is the DecorView showing through under the transparent tab bar, so it has to
+  // follow the palette rather than the build-time #F7F3EE in app.json.
   useEffect(() => {
-    if (loaded || error) SplashScreen.hide();
-  }, [loaded, error]);
+    SystemUI.setBackgroundColorAsync(c.bg);
+  }, [c.bg]);
 
+  // Do not call SplashScreen.preventAutoHideAsync() here: it marks the splash user-controlled, which
+  // disables expo-router's own release, and our hide() then landed after Android had already cancelled
+  // a blocked first frame — the splash stayed over a live app in the preview build.
   if (!loaded && !error) return null;
 
   return (

@@ -9,11 +9,11 @@
     "userInterfaceStyle": "automatic",
     "backgroundColor": "#F7F3EE",
     "ios": {
-      "bundleIdentifier": "com.reactbd.ember",
+      "bundleIdentifier": "com.ranjha.emberqr",
       "supportsTablet": false
     },
     "android": {
-      "package": "com.reactbd.ember",
+      "package": "com.ranjha.emberqr",
       "adaptiveIcon": {
         "backgroundColor": "#FF6B2C",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -42,6 +42,12 @@
     "experiments": {
       "typedRoutes": false,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "0f25410f-19e7-4cdf-85b6-052d786e6ba0"
+      }
     }
   }
 }

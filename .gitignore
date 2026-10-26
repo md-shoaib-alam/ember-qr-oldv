@@ -30,17 +30,13 @@ yarn-error.*
 .DS_Store
 *.pem
 
-# local env files
+# local env files hold real keys — never commit them
+.env
 .env*.local
 
 # typescript
 *.tsbuildinfo
 
-example
-
 # generated native folders
 /mobile/ios
 /mobile/android
-
-# local env files hold real keys — never commit them
-.env

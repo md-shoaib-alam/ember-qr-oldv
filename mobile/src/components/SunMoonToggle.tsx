@@ -1,4 +1,4 @@
-import { useId, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
   Animated,
@@ -13,7 +13,6 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
 import { Icon } from '@/components/Icon';
 import { bgFor, useTheme, useThemeMode, type Scheme } from '@/theme';
@@ -24,8 +23,8 @@ import { bgFor, useTheme, useThemeMode, type Scheme } from '@/theme';
  * large size (committing the theme mid-swap), then collapses back into the button.
  */
 
-const SWAP_MS = 1200;
-const TRAVEL_MS = 380;
+const SWAP_MS = 1000;
+const TRAVEL_MS = 340;
 const STEPS = 30;
 const ARC_RADIUS = 115;
 const QUARTER_TURN = Math.PI / 2;
@@ -116,19 +115,24 @@ function restStyle(key: BodyKey, visible: boolean): ViewStyle {
       };
 }
 
+const SKY_BANDS = 36;
+
+// The reference sky is a 3-stop vertical gradient at offsets 0 / 0.6 / 1.
+function skyColor(stops: string[], t: number): string {
+  const chan = (h: string, i: number) => parseInt(h.slice(i, i + 2), 16);
+  const mix = (h1: string, h2: string, k: number) =>
+    `#${[1, 3, 5].map((i) => Math.round(chan(h1, i) + (chan(h2, i) - chan(h1, i)) * k).toString(16).padStart(2, '0')).join('')}`;
+  return t <= 0.6 ? mix(stops[0], stops[1], t / 0.6) : mix(stops[1], stops[2], (t - 0.6) / 0.4);
+}
+
+// Plain Views, not react-native-svg: SVG children paint nothing in Expo Go on device.
 function Sky({ stops }: { stops: string[] }) {
-  const id = useId();
   return (
-    <Svg style={StyleSheet.absoluteFill} width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
-      <Defs>
-        <LinearGradient id={id} x1="0" y1="0" x2="0" y2="1">
-          <Stop offset="0" stopColor={stops[0]} />
-          <Stop offset="0.6" stopColor={stops[1]} />
-          <Stop offset="1" stopColor={stops[2]} />
-        </LinearGradient>
-      </Defs>
-      <Rect x="0" y="0" width="100" height="100" fill={`url(#${id})`} />
-    </Svg>
+    <View style={StyleSheet.absoluteFill}>
+      {Array.from({ length: SKY_BANDS }, (_, i) => (
+        <View key={i} style={{ flex: 1, backgroundColor: skyColor(stops, (i + 0.5) / SKY_BANDS) }} />
+      ))}
+    </View>
   );
 }
 
@@ -331,8 +335,15 @@ export function SunMoonToggle({ size = 44 }: { size?: number }) {
       {overlay && circleStyle && (
         <Modal visible transparent animationType="none" statusBarTranslucent>
           <View style={StyleSheet.absoluteFill}>
-            <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: bgFor(overlay.flight.from) }]}>
-              <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: bgFor(overlay.flight.to), opacity: swap }]} />
+            <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { opacity: travel }]}>
+              <View style={[StyleSheet.absoluteFill, { backgroundColor: bgFor(overlay.flight.from) }]}>
+                <Animated.View
+                  style={[
+                    StyleSheet.absoluteFill,
+                    { backgroundColor: bgFor(overlay.flight.to), opacity: swap.interpolate({ inputRange: [0, 0.6, 1], outputRange: [0, 1, 1] }) },
+                  ]}
+                />
+              </View>
             </Animated.View>
             <Animated.View pointerEvents="none" style={[styles.circle, circleStyle]}>
               <Face size={big} flight={overlay.flight} master={swap} scheme={overlay.flight.from} twinkle={twinkle} />

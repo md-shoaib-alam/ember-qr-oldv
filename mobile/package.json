@@ -1,5 +1,6 @@
 {
   "name": "@ember/mobile",
+  "version": "1.0.0",
   "main": "expo-router/entry",
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.2.0",
@@ -8,7 +9,6 @@
     "expo-constants": "~57.0.22",
     "expo-font": "~57.0.4",
     "expo-gl": "~57.0.2",
-    "expo-image": "~57.0.5",
     "expo-linking": "~57.0.13",
     "expo-router": "~57.0.28",
     "expo-sharing": "~57.0.24",

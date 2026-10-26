@@ -30,8 +30,9 @@ Material Symbols icons.
 ## Quick start
 
 ```bash
+cd mobile
 npm install
-npm run dev:mobile
+npm start
 ```
 
 When Metro is running, press <kbd>a</kbd> for Android, <kbd>i</kbd> for the iPhone simulator, or <kbd>w</kbd> for
@@ -39,11 +40,12 @@ the browser.
 
 ## Scripts
 
-Run these from the repo root:
+Run these from `mobile/`, the one place with a `package.json`:
 
 | Command | What it does |
 |---|---|
-| `npm run dev:mobile` | starts the Expo dev server |
+| `npm start` | starts the Expo dev server |
+| `npm run web` | starts it with the browser preview on |
 | `npm run typecheck` | type-checks the app with `tsc --noEmit` |
 | `npm run lint` | runs Expo's ESLint rules |
 
@@ -51,8 +53,8 @@ Run these from the repo root:
 
 ```text
 ember-qr/
-├── package.json              npm workspace root (the app lives in mobile/)
 └── mobile/                   the Expo app: SDK 57, Expo Router, React Compiler on
+    ├── package.json          the only manifest — dependencies install into mobile/node_modules
     ├── app.json              name, icons, splash screen, bundle identifier
     ├── assets/               fonts (Bricolage, Material Symbols) and app images
     └── src/
