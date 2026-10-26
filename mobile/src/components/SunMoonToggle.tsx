@@ -254,7 +254,7 @@ export function SunMoonToggle({ size = 44 }: { size?: number }) {
     if (traveling) return;
     btnRef.current?.measureInWindow((x, y, w, h) => {
       const flight: Flight = { from: scheme, to: scheme === 'dark' ? 'light' : 'dark' };
-      setOverlay({ rect: { x, y, w, h }, flight });
+      setOverlay({ rect: { x, y: y + offsetY, w, h }, flight });
       setTraveling(true);
       travel.setValue(0);
       swap.setValue(0);
@@ -266,7 +266,7 @@ export function SunMoonToggle({ size = 44 }: { size?: number }) {
             if (!done) return;
             // Re-measure: layout may have shifted while the overlay was up, and the circle must land back on the button.
             btnRef.current?.measureInWindow((bx, by, bw, bh) => {
-              setOverlay((prev) => (prev ? { ...prev, rect: { x: bx, y: by, w: bw, h: bh } } : prev));
+              setOverlay((prev) => (prev ? { ...prev, rect: { x: bx, y: by + offsetY, w: bw, h: bh } } : prev));
               Animated.timing(travel, { toValue: 0, duration: TRAVEL_MS, easing: Easing.in(Easing.cubic), useNativeDriver: false }).start(
                 ({ finished: back }) => {
                   if (!back) return;
@@ -287,7 +287,7 @@ export function SunMoonToggle({ size = 44 }: { size?: number }) {
   let circleStyle: ViewStyle | null = null;
   if (overlay) {
     const cx = cw / 2;
-    const cy = ch / 2;
+    const cy = (ch + offsetY) / 2;
     const tx = overlay.rect.x + overlay.rect.w / 2 - cx;
     const ty = overlay.rect.y + overlay.rect.h / 2 - cy;
     const sc = overlay.rect.w / big;
