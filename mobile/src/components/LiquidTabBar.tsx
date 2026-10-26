@@ -364,8 +364,8 @@ export function LiquidTabBar({ state, descriptors, navigation, insets }: TabBarP
     const t = (v: Animated.Value, to: number, duration: number, easing = springy) =>
       Animated.timing(v, { toValue: to, duration, easing, useNativeDriver: true });
     if (kind === 'pop') {
-      av.scale.setValue(0.72);
-      Animated.sequence([t(av.scale, 1.2, 300), t(av.scale, 1.08, 200)]).start();
+      // 'pop' is the Text tab's effect only; spring upward so the active icon never dips below resting size.
+      Animated.sequence([t(av.scale, 1.18, 260), t(av.scale, 1, 180)]).start();
     } else if (kind === 'glow') {
       Animated.parallel([
         Animated.sequence([t(av.ty, -5, 240), t(av.ty, 0, 200), t(av.ty, -2, 150), t(av.ty, -1, 150)]),
@@ -416,11 +416,9 @@ export function LiquidTabBar({ state, descriptors, navigation, insets }: TabBarP
   return (
     // Edge-to-edge Android can report the keyboard region in insets.bottom, which would strand the
     // bar mid-screen; real gesture/nav bars never exceed ~48dp.
-    <View style={[styles.wrap, { paddingBottom: Math.min(Math.max(insets.bottom, 12), 48) + 4 }]}>
-      <BlurView
+    <View style={[styles.wrap, { paddingBottom: Math.min(Math.max(insets.bottom, 12), 48) + 1 }]}>
+      <View
         role="tablist"
-        tint="light"
-        intensity={60}
         style={[styles.bar, { borderColor: c.tabBarBorder }]}
         onLayout={(e) => {
           const { width, height } = e.nativeEvent.layout;
@@ -429,6 +427,11 @@ export function LiquidTabBar({ state, descriptors, navigation, insets }: TabBarP
             measure(width, height);
           }
         }}>
+        {/* expo-blur paints a rectangular bitmap on Android, so it lives in a clipped layer; the water
+            canvas must stay outside that layer because its drop bulges past the pill. */}
+        <View pointerEvents="none" style={styles.blurClip}>
+          <BlurView tint="light" intensity={60} style={StyleSheet.absoluteFill} />
+        </View>
         {/* expo-blur's web build replaces backgroundColor with its own tint, so the white veil lives here instead. */}
         <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.veil, { backgroundColor: c.tabBar }]} />
         {!glOn && (
@@ -491,7 +494,7 @@ export function LiquidTabBar({ state, descriptors, navigation, insets }: TabBarP
             </Pressable>
           );
         })}
-      </BlurView>
+      </View>
     </View>
   );
 }
@@ -503,19 +506,20 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     width: '100%',
     maxWidth: 380,
-    height: 68,
+    height: 65,
     padding: BAR_PAD,
-    borderRadius: 34,
+    borderRadius: 32.5,
     borderWidth: 1,
     boxShadow: '0 12px 28px rgba(31, 27, 22, 0.16)',
   },
-  veil: { borderRadius: 33 },
+  blurClip: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 31.5, overflow: 'hidden' },
+  veil: { borderRadius: 31.5 },
   drop: {
     position: 'absolute',
     top: BAR_PAD,
     bottom: BAR_PAD,
     left: 0,
-    borderRadius: 26,
+    borderRadius: 24.5,
     backgroundColor: 'rgba(255,255,255,0.38)',
   },
   item: { flex: 1, alignItems: 'center', justifyContent: 'center' },

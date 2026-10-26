@@ -1,5 +1,5 @@
 import createQr from 'qrcode-generator';
-import Svg, { Path, Rect } from 'react-native-svg';
+import { View } from 'react-native';
 
 const QUIET_ZONE = 4;
 
@@ -7,22 +7,19 @@ const QUIET_ZONE = 4;
 // eslint-disable-next-line import/no-named-as-default-member -- the library reads this property at encode time
 createQr.stringToBytes = (s: string) => Array.from(new TextEncoder().encode(s));
 
-export type QrMatrix = { size: number; path: string };
+type Cell = { x: number; y: number; s: number; r: number; dark: boolean };
+export type QrMatrix = { size: number; cells: Cell[] };
 
 // The three 7x7 corner squares scanners lock on to.
 function inFinder(row: number, column: number, size: number) {
   return (row < 7 && column < 7) || (row < 7 && column >= size - 7) || (row >= size - 7 && column < 7);
 }
 
-// A rounded rectangle as path data, so a ring can be cut out with even-odd filling.
+// A rounded rectangle as path data; only the web PNG export needs it, since the on-screen code is
+// painted with plain views instead.
 function roundedRect(x: number, y: number, size: number, radius: number) {
   const r = Math.min(radius, size / 2);
   return `M${x + r} ${y}h${size - 2 * r}a${r} ${r} 0 0 1 ${r} ${r}v${size - 2 * r}a${r} ${r} 0 0 1 -${r} ${r}h-${size - 2 * r}a${r} ${r} 0 0 1 -${r} -${r}v-${size - 2 * r}a${r} ${r} 0 0 1 ${r} -${r}z`;
-}
-
-// Rounded modules keep the friendly look; full squares scan more reliably than dots.
-function moduleRect(x: number, y: number) {
-  return roundedRect(x + 0.05, y + 0.05, 0.9, 0.3);
 }
 
 // Returns null when the content is too long to fit in any QR code version.
@@ -36,9 +33,11 @@ export function encodeQr(payload: string): QrMatrix | null {
   }
 
   const size = qr.getModuleCount();
-  let path = '';
+  const cells: Cell[] = [];
+  // Rounded modules keep the friendly look; full squares scan more reliably than dots.
   for (let y = 0; y < size; y++)
-    for (let x = 0; x < size; x++) if (qr.isDark(y, x) && !inFinder(y, x, size)) path += moduleRect(x, y);
+    for (let x = 0; x < size; x++)
+      if (qr.isDark(y, x) && !inFinder(y, x, size)) cells.push({ x: x + 0.05, y: y + 0.05, s: 0.9, r: 0.3, dark: true });
 
   const corners = [
     [0, 0],
@@ -46,11 +45,12 @@ export function encodeQr(payload: string): QrMatrix | null {
     [0, size - 7],
   ] as const;
   for (const [x, y] of corners) {
-    // The ring: an outer square with the inner one cut out by the even-odd fill.
-    path += roundedRect(x, y, 7, 2.2) + roundedRect(x + 1, y + 1, 5, 1.4);
-    path += roundedRect(x + 2, y + 2, 3, 1);
+    // The ring is painted as three stacked squares, so no even-odd cut-out is needed.
+    cells.push({ x, y, s: 7, r: 2.2, dark: true });
+    cells.push({ x: x + 1, y: y + 1, s: 5, r: 1.4, dark: false });
+    cells.push({ x: x + 2, y: y + 2, s: 3, r: 1, dark: true });
   }
-  return { size, path };
+  return { size, cells };
 }
 
 // Web only: paints the matrix straight onto a canvas at a whole-pixel scale so the PNG stays sharp.
@@ -64,20 +64,34 @@ export function qrToPngDataUrl(matrix: QrMatrix, minSize = 1024): string {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.scale(scale, scale);
   ctx.translate(QUIET_ZONE, QUIET_ZONE);
-  ctx.fillStyle = '#000000';
-  ctx.fill(new Path2D(matrix.path), 'evenodd');
+  for (const cell of matrix.cells) {
+    ctx.fillStyle = cell.dark ? '#000000' : '#FFFFFF';
+    ctx.fill(new Path2D(roundedRect(cell.x, cell.y, cell.s, cell.r)));
+  }
   return canvas.toDataURL('image/png');
 }
 
+// Plain views rather than react-native-svg: on Android in Expo Go the SVG root takes its box but
+// never paints its children, which left the code blank white.
 export function QrCode({ matrix, size }: { matrix: QrMatrix; size: number }) {
   const total = matrix.size + QUIET_ZONE * 2;
+  const scale = size / total;
   return (
-    <Svg
-      width={size}
-      height={size}
-      viewBox={`${-QUIET_ZONE} ${-QUIET_ZONE} ${total} ${total}`}>
-      <Rect x={-QUIET_ZONE} y={-QUIET_ZONE} width={total} height={total} fill="#FFFFFF" />
-      <Path d={matrix.path} fill="#000000" fillRule="evenodd" />
-    </Svg>
+    <View style={{ width: size, height: size, backgroundColor: '#FFFFFF' }}>
+      {matrix.cells.map((cell, i) => (
+        <View
+          key={i}
+          style={{
+            position: 'absolute',
+            left: (cell.x + QUIET_ZONE) * scale,
+            top: (cell.y + QUIET_ZONE) * scale,
+            width: cell.s * scale,
+            height: cell.s * scale,
+            borderRadius: cell.r * scale,
+            backgroundColor: cell.dark ? '#000000' : '#FFFFFF',
+          }}
+        />
+      ))}
+    </View>
   );
 }

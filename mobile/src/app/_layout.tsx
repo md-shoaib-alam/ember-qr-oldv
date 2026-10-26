@@ -8,7 +8,7 @@ import { View } from 'react-native';
 import { EmberBackground } from '@/components/EmberBackground';
 import { Icon, type IconName } from '@/components/Icon';
 import { LiquidTabBar } from '@/components/LiquidTabBar';
-import { useTheme } from '@/theme';
+import { ThemeModeProvider, useTheme, useThemeMode } from '@/theme';
 
 // Keep the splash screen up until the fonts are ready, so the first frame is already in Bricolage.
 SplashScreen.preventAutoHideAsync();
@@ -21,7 +21,16 @@ const TABS: { name: string; title: string; icon: IconName }[] = [
 ];
 
 export default function RootLayout() {
+  return (
+    <ThemeModeProvider>
+      <Root />
+    </ThemeModeProvider>
+  );
+}
+
+function Root() {
   const c = useTheme();
+  const { scheme } = useThemeMode();
   const [loaded, error] = useFonts({
     'Bricolage-800-40': require('@/assets/fonts/Bricolage-800-40.ttf'),
     'Bricolage-700-16': require('@/assets/fonts/Bricolage-700-16.ttf'),
@@ -38,7 +47,7 @@ export default function RootLayout() {
 
   return (
     <View style={{ flex: 1, backgroundColor: c.bg }}>
-      <StatusBar style="auto" />
+      <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
       <EmberBackground />
       <Tabs
         tabBar={(props) => <LiquidTabBar {...props} />}

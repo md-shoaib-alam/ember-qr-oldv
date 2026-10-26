@@ -68,9 +68,10 @@ ember-qr/
         │   └── QrCode.tsx        encodes the QR code and draws it as SVG (and PNG on web)
         ├── components/
         │   ├── EmberBackground.tsx  animated Ember gradient (expo-gl shader)
-        │   ├── LiquidTabBar.tsx     liquid-glass icon-only tab bar (water-drop indicator)
+        │   ├── LiquidTabBar.tsx     liquid-glass icon-only tab bar (orange water-drop indicator)
+        │   ├── SunMoonToggle.tsx    sun/moon theme toggle (arc swap, night/day sky, persisted)
         │   └── Icon.tsx      Material Symbols icons from the bundled font
-        └── theme.ts          light and dark colours
+        └── theme.tsx         light and dark colours + persisted theme-mode provider
 ```
 
 | | Version |

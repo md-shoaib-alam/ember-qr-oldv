@@ -13,7 +13,7 @@ const light = {
   onAccent: '#FFFFFF',
   tabBar: 'rgba(255,255,255,0.50)',
   tabBarBorder: 'rgba(255,255,255,0.85)',
-  glow: ['#F6AD86', '#F9CDB3', '#FCE7DC', '#F7F3EE'],
+  glow: ['#FFFFFF', '#FFD9BF', '#FF8A3D', '#FFF7F2'],
 };
 
 const dark: typeof light = {
@@ -55,7 +55,7 @@ function isMode(v: string | null): v is ThemeMode {
 }
 
 export function ThemeModeProvider({ children }: { children: ReactNode }) {
-  const system = useColorScheme() ?? 'light';
+  const system: Scheme = useColorScheme() === 'dark' ? 'dark' : 'light';
   const [mode, setModeState] = useState<ThemeMode>('system');
 
   // Restore the persisted choice once; fall back to system on any read error.
@@ -89,6 +89,9 @@ export function ThemeModeProvider({ children }: { children: ReactNode }) {
 
 /** Resolved palette. Safe to call anywhere under `ThemeModeProvider`. */
 export const useTheme = (): Theme => useContext(ThemeModeContext)?.theme ?? light;
+
+/** Page background for a scheme, for full-screen transition backdrops. */
+export const bgFor = (s: Scheme): string => (s === 'dark' ? dark.bg : light.bg);
 
 /** Full theme-mode controls (mode, scheme, setMode, toggle). Provider required. */
 export function useThemeMode(): ThemeModeContextValue {

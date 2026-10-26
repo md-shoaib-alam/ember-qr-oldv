@@ -18,6 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { captureRef } from 'react-native-view-shot';
 
 import { Icon } from '@/components/Icon';
+import { SunMoonToggle } from '@/components/SunMoonToggle';
 import { encodeQr, QrCode, qrToPngDataUrl } from '@/qr/QrCode';
 import { useTheme } from '@/theme';
 
@@ -64,9 +65,12 @@ export function QrScreen({ title, payload, hint, caption, children }: Props) {
     <SafeAreaView style={[styles.screen, isWeb && !focused && styles.hidden]} edges={['top', 'left', 'right']}>
       <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          <Text role="heading" style={[styles.title, { color: c.text }]}>
-            {title}
-          </Text>
+          <View style={styles.header}>
+            <Text role="heading" style={[styles.title, { color: c.text }]}>
+              {title}
+            </Text>
+            <SunMoonToggle size={40} />
+          </View>
 
           <View style={[styles.card, styles.qrCard, { backgroundColor: c.surface, borderColor: c.border }]}>
             {matrix ? (
@@ -142,7 +146,8 @@ const styles = StyleSheet.create({
   hidden: { display: 'none' },
   content: { padding: 20, paddingBottom: 32, gap: 16, width: '100%', maxWidth: 520, alignSelf: 'center' },
 
-  title: { fontFamily: 'Bricolage-800-40', fontSize: 24, lineHeight: 30, letterSpacing: -0.4 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+  title: { fontFamily: 'Bricolage-800-40', fontSize: 24, lineHeight: 30, letterSpacing: -0.4, flex: 1 },
 
   card: { borderRadius: 24, borderWidth: 1, padding: 16, gap: 14 },
   qrCard: { alignItems: 'center' },
